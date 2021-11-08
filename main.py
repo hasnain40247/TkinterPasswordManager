@@ -1,10 +1,42 @@
+import json
 from tkinter import *
 import pyperclip
 
+
+def searchJson():
+    with open("passwordManagerSaves.json","r") as data_file:
+        data=json.load(data_file)
+        website=entry_website.get()
+        if website!="":
+            if website not in data:
+                print("not exist")
+
+            else:
+                print(data[website])
+                open_popup(website,data[website]["email"],
+                           data[website]["password"],0)
+        else:
+            open_popup("","","",0)
+
 def savePassword():
-    with open("passwordManagerSaves.txt", 'a+') as file:
-        file.write(f"{website} | {uname} | {passw}\n")
-        print(website + uname + passw)
+    new_data={
+        website:{
+            "email":uname,
+            "password":passw
+        }
+    }
+    try:
+        with open("passwordManagerSaves.json", 'r') as data_file:
+
+            data=json.load(data_file)
+    except FileNotFoundError:
+        with open("passwordManagerSaves.json", 'w') as data_file:
+            json.dump(new_data, data_file, indent=4)
+    else:
+        data.update(new_data)
+        with open("passwordManagerSaves.json", 'w') as data_file:
+            json.dump(data, data_file, indent=4)
+    finally:
         entry_website.delete(0,'end')
         entry_password.delete(0,'end')
         destroyWind()
@@ -59,7 +91,7 @@ window.title("Password Generator")
 window.config(padx=20, pady=20)
 
 
-def open_popup(website, uname, passw):
+def open_popup(website, uname, passw,case):
     global top
     top = Toplevel(window)
     top.geometry("340x65")
@@ -71,12 +103,16 @@ def open_popup(website, uname, passw):
         button = Button(top, text="Ok", width=14, command=destroyWind)
         button.grid(column=2, row=1)
     else:
+
         top.geometry("400x125")
-        label1 = Label(top, text="Are You Sure?", font=("Arial", 10, "bold"))
+        label1 = Label(top, text="Your Details", font=("Arial", 10, "bold"))
         label1.grid(column=1, row=0)
         label = Label(top, text=f"Website: {website}\nUsername: {uname}\nPassword: {passw}")
         label.grid(column=2, row=1)
-        button = Button(top, text="Save Password", width=14, command=savePassword)
+        if case == 1:
+            button = Button(top, text="Save Password", width=14, command=savePassword)
+        else:
+            button = Button(top, text="Ok", width=14, command=destroyWind)
         button.grid(column=3, row=2)
 
 
@@ -85,7 +121,7 @@ def check_fields():
     website = entry_website.get()
     uname = entry_email_uname.get()
     passw = entry_password.get()
-    open_popup(website, uname, passw)
+    open_popup(website, uname, passw,1)
 
 
 canvas = Canvas(width=200, height=200)
@@ -98,13 +134,13 @@ label_website.grid(column=0, row=1)
 
 entry_website = Entry()
 entry_website.focus()
-entry_website.grid(column=1, row=1, columnspan=2, sticky="EW")
+entry_website.grid(column=1, row=1,sticky="EW")
 
 label_email_uname = Label(text="Email/Username:")
 label_email_uname.grid(column=0, row=2)
 
 entry_email_uname = Entry()
-entry_email_uname.insert(0, "hnsikora@gmail.com")
+entry_email_uname.insert(0, "xyz@gmail.com")
 entry_email_uname.grid(column=1, row=2, columnspan=2, sticky="EW")
 
 label_password = Label(text="Password:")
@@ -115,6 +151,9 @@ entry_password.grid(column=1, row=3, sticky="EW")
 
 generate_btn = Button(text="Generate Password",command=genPass)
 generate_btn.grid(column=2, row=3, sticky="EW")
+
+search_btn = Button(text="Search",command=searchJson)
+search_btn.grid(column=2, row=1, sticky="EW")
 
 add_btn = Button(text="Add", width=35, command=check_fields)
 add_btn.grid(column=1, row=4, columnspan=2, sticky="EW")
